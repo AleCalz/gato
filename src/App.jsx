@@ -8,7 +8,7 @@ const Square = ({ children, updateBoard, idx, isSelected }) => {
   const classname = `square ${isSelected ? "is-selected" : ""}`;
 
   const handleClick = () => {
-    updateBoard();
+    updateBoard(idx) ;
   };
   return (
     <div onClick={handleClick} className={classname}>
@@ -16,7 +16,7 @@ const Square = ({ children, updateBoard, idx, isSelected }) => {
     </div>
   );
 };
-
+ 
 function App() {
   //estado para tablero se act
   const [board, setBoard] = useState(Array(9).fill(null));
@@ -24,7 +24,11 @@ function App() {
   //nuevo estato para conocer el turno
   const [turn, setTurn] = useState(TURNS.X);
 
-  const updateBoard = () => {
+  const updateBoard = (idx) => {
+    const newBoard = [...board]
+    newBoard[idx] = turn // X u O
+    setBoard(newBoard)
+    
     const newTurn = turn === TURNS.X ? TURNS.O : TURNS.X;
     setTurn(newTurn);
   };
