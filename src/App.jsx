@@ -64,6 +64,9 @@ function App() {
     setWinner(null);
   };
 
+  const checkEndGame = (newBoard) => {
+    return newBoard.every((Square) => Square !== null) // revisamos que todo tenga X u O 
+  }
   const updateBoard = (idx) => {
     // nunca mutar las props
     //no act la posicion si ya existe algo
@@ -82,6 +85,8 @@ function App() {
     if (newWinner) {
       setWinner(newWinner); //act el estado del ganador (ASINCRONO)
       // alert(`El ganador es ${newWinner}`);
+    }else if (checkEndGame(newBoard)) {
+      setWinner(false) //empate 
     }
   };
   return (
