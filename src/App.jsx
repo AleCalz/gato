@@ -1,39 +1,25 @@
 import { useState } from "react";
 import confetti from "canvas-confetti";
-const TURNS = {
-  X: "x",
-  O: "o",
-};
 
-const Square = ({ children, updateBoard, idx, isSelected }) => {
-  const classname = `square ${isSelected ? "is-selected" : ""}`;
-
-  const handleClick = () => {
-    updateBoard(idx);
-  };
-  return (
-    <div onClick={handleClick} className={classname}>
-      {children}
-    </div>
-  );
-};
-
-const WINNER_COMBOS = [
-  [0, 1, 2],
-  [3, 4, 5],
-  [6, 7, 8],
-  [0, 3, 6],
-  [1, 4, 7],
-  [2, 5, 8],
-  [0, 4, 8],
-  [2, 4, 6],
-];
+import { Square } from "./components/Square";
+import { TURNS, WINNER_COMBOS } from "./constants";
+import { WinnerModal } from "./components/WinnerModal";
 
 function App() {
   //estado para tablero se act
-  const [board, setBoard] = useState(Array(9).fill(null));
+  const [board, setBoard] = useState(() => {
+    const boardFromStorage = window.localStorage.getItem("board");
+
+    return boardFromStorage //decidimos valor inicial del estado
+      ? JSON.parse(boardFromStorage)
+      : Array(9).fill(null);
+  });
   //nuevo estato para conocer el turno
-  const [turn, setTurn] = useState(TURNS.X);
+  const [turn, setTurn] = useState(() => {
+    const turnFormStorage = window.localStorage.getItem("turn");
+
+    return turnFormStorage ?? TURNS.X;
+  });
   //null = no hay ganador, false = empate, true = ganador
   const [winner, setWinner] = useState(null);
 
@@ -63,11 +49,14 @@ function App() {
     setTurn(TURNS.X);
     //ganador
     setWinner(null);
+    //reseteamos el localStorage
+    window.localStorage.removeItem("turn");
+    window.localStorage.removeItem("board");
   };
 
   const checkEndGame = (newBoard) => {
-    return newBoard.every((Square) => Square !== null) // revisamos que todo tenga X u O 
-  }
+    return newBoard.every((Square) => Square !== null); // revisamos que todo tenga X u O
+  };
   const updateBoard = (idx) => {
     // nunca mutar las props
     //no act la posicion si ya existe algo
@@ -81,14 +70,17 @@ function App() {
     const newTurn = turn === TURNS.X ? TURNS.O : TURNS.X;
     setTurn(newTurn);
 
+    //GUARDAR PARTIDA
+    window.localStorage.setItem("board", JSON.stringify(newBoard));
+    window.localStorage.setItem("turn", newTurn);
     //revisamos si hay ganador
     const newWinner = checkWinner(newBoard);
     if (newWinner) {
-      confetti()
+      confetti();
       setWinner(newWinner); //act el estado del ganador (ASINCRONO)
       // alert(`El ganador es ${newWinner}`);
-    }else if (checkEndGame(newBoard)) {
-      setWinner(false) //empate 
+    } else if (checkEndGame(newBoard)) {
+      setWinner(false); //empate
     }
   };
   return (
@@ -109,20 +101,7 @@ function App() {
         <Square isSelected={turn === TURNS.O}>{TURNS.O}</Square>
       </section>
 
-      {winner !== null && (
-        <section className="winner">
-          <div className="text">
-            <h2>{winner === false ? "Empate" : "Gano: "}</h2>
-            <header className="win">
-              {winner && <Square>{winner}</Square>}
-            </header>
-
-            <footer>
-              <button onClick={resetGame}>Emprezar de nuevo</button>
-            </footer>
-          </div>
-        </section>
-      )}
+      <WinnerModal resetGame={resetGame} winner={winner} />
     </main>
   );
 }
